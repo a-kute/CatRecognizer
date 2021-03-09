@@ -2,7 +2,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import h5py
 import scipy
-
+from PIL import Image
 from scipy import ndimage
 from lr_utils import load_dataset
 
@@ -82,12 +82,16 @@ def propagate(w, b, X, Y):
 
 
     A = sigmoid(np.dot(w.T, X) + b)  # compute activation
-    cost = (-1 / m) * np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A))  # compute cost
+    cost = np.sum(Y * np.log(A) + (1 - Y) * np.log(1 - A))
+    cost/= m
+    cost*=-1# compute cost
 
 
 
-    dw = (1 / m) * np.dot(X, (A - Y).T)
+    dw = np.dot(X, (A - Y).T)
+    dw/=m
     db = (1 / m) * np.sum(A - Y)
+    db /= m
 
 
     assert (dw.shape == w.shape)
@@ -199,7 +203,21 @@ def model(X_train, Y_train, X_test, Y_test, num_iterations=2000, learning_rate=0
     return d
 
 
-d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 2000, learning_rate = 0.5, print_cost = True)
+d = model(train_set_x, train_set_y, test_set_x, test_set_y, num_iterations = 2000, learning_rate = 0.005, print_cost = True)
+
+
+my_image = "cat_in_iran-2.jpg"
+
+
+
+fname = "images/" + my_image
+image = np.array(ndimage.imread(fname, flatten=False))
+image = image/255.
+my_image = scipy.misc.imresize(image, size=(num_px,num_px)).reshape((1, num_px*num_px*3)).T
+my_predicted_image = predict(d["w"], d["b"], my_image)
+
+plt.imshow(image)
+print("y = " + str(np.squeeze(my_predicted_image)) + ", your algorithm predicts a \"" + classes[int(np.squeeze(my_predicted_image)),].decode("utf-8") +  "\" picture.")
 
 
 
